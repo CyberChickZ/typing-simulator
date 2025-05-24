@@ -23,3 +23,8 @@ venv/
 
 # Logs
 *.log
+
+# Backups and editor temps
+*.bak
+*.swp
+*.swo
