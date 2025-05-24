@@ -56,16 +56,6 @@ python typing_simulator.py
 
 ## 📄 License
 
-This project is licensed under the [CC BY-NC 3.0](https://creativecommons.org/licenses/by-nc/3.0/) License.
+This project is licensed under the [GPL-3.0 License](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
-````
-
----
-
-如果你已经绑定了远程仓库 `CyberChickZ/typing-simulator`，下一步可以：
-
-```bash
-git add README.md
-git commit -m "Update README.md with correct formatting and GitHub username"
-git push
 ````
