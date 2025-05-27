@@ -2,21 +2,31 @@ import time
 import random
 import pyautogui
 import PySimpleGUI as sg
+import re
+
+def chunk_text(text):
+    """
+    Split text into chunks: word, punctuation, or newline.
+    E.g. "Hello, world!\nHow are you?" -> ['Hello', ',', ' ', 'world', '!', '\n', 'How', ' ', 'are', ' ', 'you', '?']
+    """
+    pattern = r'\w+|[^\w\s]|\s'
+    return re.findall(pattern, text)
 
 # Typing simulation function
 def simulate_typing(text, min_delay_ms, max_delay_ms, punctuation_pause_ms, debug=False):
-    for char in text:
-        pyautogui.write(char)
+    chunks = chunk_text(text)
+    for chunk in chunks:
+        pyautogui.write(chunk)
 
+        last_char = chunk[-1]
         delay = random.randint(min_delay_ms, max_delay_ms)
-        if char in ['.', ';']:
+        if last_char in ['.', ';']:
             delay += punctuation_pause_ms
-        elif char == '\n':
-            delay += punctuation_pause_ms * 2
+        elif last_char == '\n':
+            delay += 2 * punctuation_pause_ms
 
         if debug:
-            printable = repr(char) if char == '\n' else char
-            print(f"Typing char: {printable} | delay: {delay / 1000:.2f}s")
+            print(f"Typing chunk: {repr(chunk)} | delay: {delay / 1000:.2f}s")
 
         time.sleep(delay / 1000)
 
