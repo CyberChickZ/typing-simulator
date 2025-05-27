@@ -3,7 +3,39 @@ import random
 import pyautogui
 import PySimpleGUI as sg
 import re
+import string
+import random
 
+def inject_typo(chunk, typo_chance=0.07, fix_chance=0.5):
+    # Inject typos only in letter/word chunks
+    if not chunk.isalpha() or len(chunk) < 3 or random.random() > typo_chance:
+        return [chunk]  # Return list for consistent processing later
+
+    # Typo types (implementing one of replace/swap/delete/insert)
+    typo_types = ['replace', 'swap', 'delete', 'insert']
+    typo_type = random.choice(typo_types)
+
+    chars = list(chunk)
+    idx = random.randint(0, len(chars) - 1)
+
+    if typo_type == 'replace':
+        wrong = random.choice(string.ascii_letters)
+        chars[idx] = wrong
+    elif typo_type == 'swap' and len(chars) > 1 and idx < len(chars) - 1:
+        chars[idx], chars[idx + 1] = chars[idx + 1], chars[idx]
+    elif typo_type == 'delete' and len(chars) > 1:
+        chars.pop(idx)
+    elif typo_type == 'insert':
+        chars.insert(idx, random.choice(string.ascii_letters))
+
+    typo_word = ''.join(chars)
+
+    # Simulate fixing the typo (backspace + retype)
+    if random.random() < fix_chance:
+        # Backspace length equals typo_word
+        return [typo_word, '\b' * len(typo_word), chunk]
+    else:
+        return [typo_word]  # No fix, keep the typo
 def chunk_text(text):
     """
     Split text into chunks: word, punctuation, or newline.
@@ -16,7 +48,11 @@ def chunk_text(text):
 def simulate_typing(text, min_delay_ms, max_delay_ms, punctuation_pause_ms, debug=False):
     chunks = chunk_text(text)
     for chunk in chunks:
-        pyautogui.write(chunk)
+        for part in inject_typo(chunk):
+            pyautogui.write(part)
+            # If it's a backspace character, a very short delay can be added
+            if part and part[0] == '\b':
+                time.sleep(0.03 * len(part))
 
         last_char = chunk[-1]
         delay = random.randint(min_delay_ms, max_delay_ms)
