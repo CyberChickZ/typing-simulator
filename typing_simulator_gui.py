@@ -62,16 +62,16 @@ def simulate_typing(text, min_delay_ms, max_delay_ms, punctuation_pause_ms, debu
             if part and part[0] == '\b':
                 time.sleep(0.03 * len(part))
             else:
-                # 计算延迟（按字母数）
+                # calculate delay (based on character count)
                 base_delay = random.randint(min_delay_ms, max_delay_ms)
-                # 标点和换行特殊停顿
+                # special pause for punctuation and newline
                 last_char = part[-1] if part else ""
                 if last_char in ['.', ';']:
                     base_delay += punctuation_pause_ms
                 elif last_char == '\n':
                     base_delay += 2 * punctuation_pause_ms
 
-                # 延迟与实际长度成比例
+                # delay proportional to actual length
                 delay = base_delay * max(1, len(part))
                 time.sleep(delay / 1000)
 
