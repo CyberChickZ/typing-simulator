@@ -36,10 +36,10 @@ def inject_typo(chunk, typo_chance=0.07, fix_chance=0.5):
         return [typo_word, '\b' * len(typo_word), chunk]
     else:
         return [typo_word]  # No fix, keep the typo
+
 def chunk_text(text):
     """
-    Split text into chunks: word, punctuation, or newline.
-    E.g. "Hello, world!\nHow are you?" -> ['Hello', ',', ' ', 'world', '!', '\n', 'How', ' ', 'are', ' ', 'you', '?']
+    Split text into chunks: words, punctuation, whitespace, or newlines.
     """
     pattern = r'\w+|[^\w\s]|\s'
     return re.findall(pattern, text)
@@ -47,39 +47,55 @@ def chunk_text(text):
 # Typing simulation function
 def simulate_typing(text, min_delay_ms, max_delay_ms, punctuation_pause_ms, debug=False):
     chunks = chunk_text(text)
-    for chunk in chunks:
-        for part in inject_typo(chunk):
-            pyautogui.write(part)
-            # If it's a backspace character, a very short delay can be added
-            if part and part[0] == '\b':
-                time.sleep(0.1 * len(part))
-
-        last_char = chunk[-1]
-        for part in chunks:
-            pyautogui.write(part)
-            if debug:
-                print(f"Typing: {repr(part)} (original: {repr(chunk)})")
-            if part and part[0] == '\b':
-                time.sleep(0.03 * len(part))
+    for i, chunk in enumerate(chunks):
+        typo_chunks = inject_typo(chunk)  # Your inject_typo remains unchanged, returning list
+        for part in typo_chunks:
+            # Determine type
+            if part == chunk:
+                part_type = "normal"
+            elif set(part) == {"\b"}:
+                part_type = f"backspace × {len(part)}"
+            elif part.isalpha() and part != chunk:
+                part_type = "typo/correction"
             else:
-                # calculate delay (based on character count)
-                base_delay = random.randint(min_delay_ms, max_delay_ms)
-                # special pause for punctuation and newline
-                last_char = part[-1] if part else ""
-                if last_char in ['.', ';']:
-                    base_delay += punctuation_pause_ms
-                elif last_char == '\n':
+                part_type = "other"
+
+            # Simulate typing
+            if part_type == "backspace":
+                # todo: split backspace and string into 2 parts(\b *n and string)
+                # Brief pause after backspace
+                if part != '\b' and part[0] == '\b':
+                    base_delay = 1 * len(part)
+                    # if random.random() < 0.1:
+                    # delay = 15 * 1000
+            else:
+                pyautogui.write(part, interval=0.01)
+
+            # Determine delay
+            base_delay = random.randint(min_delay_ms, max_delay_ms)
+            last_char = part[-1] if part else ""
+            if last_char in ['.', ';']:
+                # base_delay += 2 * punctuation_pause_ms * random.choice([1, 0.9])
+                if random.random() < 0.3:
                     base_delay += 2 * punctuation_pause_ms
+                else:
+                    base_delay = 15 * 1000
 
-                # delay proportional to actual length
-                delay = base_delay * max(1, len(part))
-                time.sleep(delay / 1000)
+            elif last_char in [',', ]:
+                base_delay +=  0.5 * punctuation_pause_ms
+                if random.random() < 0.1:
+                    base_delay = 15 * 1000
+            elif last_char == '\n':
+                base_delay += 3 * punctuation_pause_ms * 10
+            delay = base_delay / 1000
 
-        if debug:
-            print(f"Typing chunk: {repr(chunk)} | delay: {delay / 1000:.2f}s")
+            if debug:
+                print(
+                    f"[{i:03d}] {part_type:<14} | Out: {repr(part):<18} | "
+                    f"Orig: {repr(chunk):<18} | Delay: {delay:>5.2f}s"
+                )
 
-        time.sleep(delay / 1000)
-
+            time.sleep(delay)
 # GUI layout
 sg.theme("SystemDefault")
 layout = [
