@@ -52,14 +52,28 @@ def simulate_typing(text, min_delay_ms, max_delay_ms, punctuation_pause_ms, debu
             pyautogui.write(part)
             # If it's a backspace character, a very short delay can be added
             if part and part[0] == '\b':
-                time.sleep(0.03 * len(part))
+                time.sleep(0.1 * len(part))
 
         last_char = chunk[-1]
-        delay = random.randint(min_delay_ms, max_delay_ms)
-        if last_char in ['.', ';']:
-            delay += punctuation_pause_ms
-        elif last_char == '\n':
-            delay += 2 * punctuation_pause_ms
+        for part in chunks:
+            pyautogui.write(part)
+            if debug:
+                print(f"Typing: {repr(part)} (original: {repr(chunk)})")
+            if part and part[0] == '\b':
+                time.sleep(0.03 * len(part))
+            else:
+                # 计算延迟（按字母数）
+                base_delay = random.randint(min_delay_ms, max_delay_ms)
+                # 标点和换行特殊停顿
+                last_char = part[-1] if part else ""
+                if last_char in ['.', ';']:
+                    base_delay += punctuation_pause_ms
+                elif last_char == '\n':
+                    base_delay += 2 * punctuation_pause_ms
+
+                # 延迟与实际长度成比例
+                delay = base_delay * max(1, len(part))
+                time.sleep(delay / 1000)
 
         if debug:
             print(f"Typing chunk: {repr(chunk)} | delay: {delay / 1000:.2f}s")
